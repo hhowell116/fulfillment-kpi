@@ -202,55 +202,6 @@
             font-size: 0.8em;
         }
 
-        /* New: Performance Gauge Styles */
-        .performance-gauge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 20px;
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
-            margin: 2px 0;
-        }
-
-        .performance-fill {
-            height: 100%;
-            position: absolute;
-            left: 0;
-            border-radius: 10px;
-        }
-
-        .performance-label {
-            position: relative;
-            z-index: 1;
-            font-size: 0.75em;
-            font-weight: 600;
-            color: white;
-            padding: 0 8px;
-        }
-
-        /* Performance threshold indicators */
-        .threshold-line {
-            position: absolute;
-            height: 100%;
-            width: 2px;
-            top: 0;
-            z-index: 2;
-        }
-
-        .threshold-label {
-            position: absolute;
-            bottom: -20px;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            color: #a0906f;
-            white-space: nowrap;
-        }
-
-        .threshold-85 { background-color: rgba(93, 164, 93, 0.7); }
-        .threshold-95 { background-color: rgba(210, 180, 140, 0.7); }
-
         /* Updated table container styles */
         .table-container {
             background: white;
@@ -536,7 +487,7 @@
                         <h2 class="chart-title">Daily Fill Rate Performance</h2>
                         <div class="legend">
                             <div class="legend-item">
-                                <div class="legend-color" style="background: #5a8c5a;"></div>
+                                <div class="legend-color" style="background: #d2b48c;"></div>
                                 <span class="legend-label">4 Day</span>
                             </div>
                             <div class="legend-item">
@@ -777,52 +728,39 @@
             
             const ctx1 = document.getElementById('fillRateChart').getContext('2d');
             
-            // NEW: Create a stacked bar chart for fill rates
+            // NEW: Create a stacked bar chart where each day has one bar split into two colors
             fillRateChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: '4 Day Fill Rate',
-                        data: monthData.map(d => d.rate4),
-                        backgroundColor: monthData.map(d => {
-                            // Color gradient based on performance
-                            if (d.rate4 >= 95) return 'rgba(93, 164, 93, 0.8)'; // Excellent: dark green
-                            if (d.rate4 >= 85) return 'rgba(147, 196, 125, 0.8)'; // Good: green
-                            if (d.rate4 >= 70) return 'rgba(255, 193, 87, 0.8)'; // Warning: orange
-                            return 'rgba(220, 118, 118, 0.8)'; // Poor: red
-                        }),
-                        borderColor: monthData.map(d => {
-                            if (d.rate4 >= 95) return '#5a8c5a';
-                            if (d.rate4 >= 85) return '#7db47d';
-                            if (d.rate4 >= 70) return '#d4a05c';
-                            return '#c67b7b';
-                        }),
-                        borderWidth: 2,
-                        borderRadius: 4,
-                        categoryPercentage: 0.8,
-                        barPercentage: 0.9
-                    }, {
-                        label: '7 Day Fill Rate',
-                        data: monthData.map(d => d.rate7),
-                        backgroundColor: monthData.map(d => {
-                            // Color gradient based on performance
-                            if (d.rate7 >= 95) return 'rgba(139, 115, 85, 0.8)'; // Excellent: dark tan
-                            if (d.rate7 >= 85) return 'rgba(165, 145, 115, 0.8)'; // Good: tan
-                            if (d.rate7 >= 70) return 'rgba(210, 180, 140, 0.8)'; // Warning: light tan
-                            return 'rgba(198, 123, 123, 0.8)'; // Poor: light red
-                        }),
-                        borderColor: monthData.map(d => {
-                            if (d.rate7 >= 95) return '#8b7355';
-                            if (d.rate7 >= 85) return '#a59173';
-                            if (d.rate7 >= 70) return '#d2b48c';
-                            return '#c67b7b';
-                        }),
-                        borderWidth: 2,
-                        borderRadius: 4,
-                        categoryPercentage: 0.8,
-                        barPercentage: 0.9
-                    }]
+                    datasets: [
+                        {
+                            label: '7 Day Fill Rate',
+                            data: monthData.map(d => d.rate7),
+                            backgroundColor: '#8b7355', // Dark tan for 7-day
+                            borderColor: '#7a634d',
+                            borderWidth: 1,
+                            borderRadius: {
+                                topLeft: 4,
+                                topRight: 4,
+                                bottomLeft: 0,
+                                bottomRight: 0
+                            }
+                        },
+                        {
+                            label: '4 Day Fill Rate',
+                            data: monthData.map(d => d.rate4),
+                            backgroundColor: '#d2b48c', // Light tan for 4-day
+                            borderColor: '#c4a57b',
+                            borderWidth: 1,
+                            borderRadius: {
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 4,
+                                bottomRight: 4
+                            }
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -844,56 +782,12 @@
                             borderColor: '#d2b48c',
                             borderWidth: 1,
                             padding: 12,
-                            displayColors: false,
+                            displayColors: true,
                             callbacks: {
                                 label: function(context) {
                                     const datasetLabel = context.dataset.label;
                                     const value = context.parsed.y;
-                                    let performance = '';
-                                    
-                                    if (value >= 95) performance = ' (Excellent)';
-                                    else if (value >= 85) performance = ' (Good)';
-                                    else if (value >= 70) performance = ' (Warning)';
-                                    else performance = ' (Needs Attention)';
-                                    
-                                    return `${datasetLabel}: ${value.toFixed(2)}%${performance}`;
-                                }
-                            }
-                        },
-                        // Add annotation for target lines
-                        annotation: {
-                            annotations: {
-                                line85: {
-                                    type: 'line',
-                                    yMin: 85,
-                                    yMax: 85,
-                                    borderColor: 'rgba(93, 164, 93, 0.7)',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        content: '85% Target',
-                                        enabled: true,
-                                        position: 'end',
-                                        backgroundColor: 'rgba(93, 164, 93, 0.8)',
-                                        color: 'white',
-                                        font: { size: 10 }
-                                    }
-                                },
-                                line95: {
-                                    type: 'line',
-                                    yMin: 95,
-                                    yMax: 95,
-                                    borderColor: 'rgba(139, 115, 85, 0.7)',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        content: '95% Target',
-                                        enabled: true,
-                                        position: 'end',
-                                        backgroundColor: 'rgba(139, 115, 85, 0.8)',
-                                        color: 'white',
-                                        font: { size: 10 }
-                                    }
+                                    return `${datasetLabel}: ${value.toFixed(2)}%`;
                                 }
                             }
                         }
@@ -902,6 +796,7 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
+                            stacked: false, // We want them to overlap, not stack
                             ticks: { 
                                 callback: v => v + '%',
                                 color: '#a0906f',
@@ -919,6 +814,7 @@
                             }
                         },
                         x: {
+                            stacked: false,
                             ticks: { 
                                 color: '#a0906f',
                                 font: { size: 11 }
@@ -938,7 +834,10 @@
                     interaction: {
                         intersect: false,
                         mode: 'index'
-                    }
+                    },
+                    // Make bars appear as one bar per day with two colors
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
                 }
             });
             
@@ -952,19 +851,19 @@
                     datasets: [{
                         label: 'Orders Remaining (4 Day)',
                         data: monthData.map(d => d.rem4),
-                        borderColor: '#5a8c5a',
-                        backgroundColor: 'rgba(90, 140, 90, 0.1)',
+                        borderColor: '#d2b48c', // Light tan
+                        backgroundColor: 'rgba(210, 180, 140, 0.1)',
                         borderWidth: 3,
                         tension: 0.3,
                         fill: true,
                         pointRadius: 4,
-                        pointBackgroundColor: '#5a8c5a',
+                        pointBackgroundColor: '#d2b48c',
                         pointBorderColor: 'white',
                         pointBorderWidth: 2
                     }, {
                         label: 'Orders Remaining (7 Day)',
                         data: monthData.map(d => d.rem7),
-                        borderColor: '#8b7355',
+                        borderColor: '#8b7355', // Dark tan
                         backgroundColor: 'rgba(139, 115, 85, 0.1)',
                         borderWidth: 3,
                         tension: 0.3,
