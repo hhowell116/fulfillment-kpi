@@ -515,54 +515,56 @@
             </div>
         </div>
 
-        <div class="monthly-view active">
-            <div class="charts-section">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Orders Received</th>
-                                <th>Remaining (4 Day)</th>
-                                <th>Remaining (7 Day)</th>
-                                <th>Fill Rate (4 Day)</th>
-                                <th>Fill Rate (7 Day)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTable">
-                        </tbody>
-                    </table>
+        
+<div class="monthly-view active">
+
+    <!-- GRAPH 1 — Daily Fill Rates -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h2 class="chart-title">Daily Fulfillment Rates</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d2b48c;"></div>
+                    <span class="legend-label">4 Day Rate</span>
                 </div>
-
-                <div class="charts-column">
-                    <div class="chart-container compact">
-                        <div class="chart-header">
-                            <h2 class="chart-title">Daily Fill Rates</h2>
-                            <div class="legend">
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background: #d2b48c;"></div>
-                                    <span class="legend-label">4 Day</span>
-                                </div>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background: #8b7355;"></div>
-                                    <span class="legend-label">7 Day</span>
-                                </div>
-                            </div>
-                        </div>
-                        <canvas id="fillRateChart"></canvas>
-                    </div>
-
-                    <div class="chart-container compact">
-                        <div class="chart-header">
-                            <h2 class="chart-title">Orders Remaining</h2>
-                        </div>
-                        <canvas id="ordersChart"></canvas>
-                    </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #8b7355;"></div>
+                    <span class="legend-label">7 Day Rate</span>
                 </div>
             </div>
         </div>
+        <canvas id="fillRateChart"></canvas>
+    </div>
 
-        <div class="calendar-view">
+    <!-- TABLE IN THE MIDDLE -->
+    <div class="table-container" style="margin: 25px 0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Orders Received</th>
+                    <th>Remaining (4 Day)</th>
+                    <th>Remaining (7 Day)</th>
+                    <th>Fill Rate (4 Day)</th>
+                    <th>Fill Rate (7 Day)</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+        </table>
+    </div>
+
+    <!-- GRAPH 2 — Orders Remaining -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h2 class="chart-title">Orders Remaining Over Time</h2>
+        </div>
+        <canvas id="ordersChart"></canvas>
+    </div>
+
+</div>
+
+
+<div class="calendar-view">
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
 
