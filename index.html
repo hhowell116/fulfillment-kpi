@@ -101,6 +101,11 @@
             box-shadow: 0 2px 10px rgba(210, 180, 140, 0.2);
         }
 
+        select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -249,7 +254,6 @@
             font-weight: 600;
         }
 
-        /* Calendar View Styles */
         .calendar-view {
             display: none;
         }
@@ -374,11 +378,11 @@
             display: block;
         }
 
-        .monthly-view, .charts-view {
+        .monthly-view {
             display: none;
         }
 
-        .monthly-view.active, .charts-view.active {
+        .monthly-view.active {
             display: block;
         }
 
@@ -452,9 +456,8 @@
             </div>
         </div>
 
-        <!-- Monthly View -->
         <div class="monthly-view active">
-            <div class="chart-container charts-view active">
+            <div class="chart-container">
                 <div class="chart-header">
                     <h2 class="chart-title">Daily Fulfillment Rates</h2>
                     <div class="legend">
@@ -471,7 +474,7 @@
                 <canvas id="fillRateChart"></canvas>
             </div>
 
-            <div class="chart-container charts-view active">
+            <div class="chart-container">
                 <div class="chart-header">
                     <h2 class="chart-title">Orders Remaining Over Time</h2>
                 </div>
@@ -496,7 +499,6 @@
             </div>
         </div>
 
-        <!-- Calendar View -->
         <div class="calendar-view">
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
@@ -554,7 +556,6 @@
                 document.getElementById('avgOrders').textContent = Math.round(totalOrders / validData.length).toLocaleString();
                 document.getElementById('periodLabel').textContent = 'year';
             } else {
-                renderMonthlyView();
                 const monthData = getMonthData(currentYear, currentMonth);
                 
                 if (monthData.length === 0) {
@@ -599,7 +600,6 @@
                 const daysContainer = document.createElement('div');
                 daysContainer.className = 'calendar-days';
                 
-                // Day labels
                 ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
                     const label = document.createElement('div');
                     label.className = 'day-label';
@@ -610,14 +610,12 @@
                 const firstDay = new Date(currentYear, m, 1).getDay();
                 const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
                 
-                // Empty cells
                 for (let i = 0; i < firstDay; i++) {
                     const empty = document.createElement('div');
                     empty.className = 'calendar-day empty';
                     daysContainer.appendChild(empty);
                 }
                 
-                // Days
                 for (let d = 1; d <= daysInMonth; d++) {
                     const dayData = fullData.find(item => {
                         const date = parseDate(item.date);
@@ -685,10 +683,6 @@
             const tooltip = document.getElementById('tooltip');
             tooltip.style.left = (e.clientX + 15) + 'px';
             tooltip.style.top = (e.clientY + 15) + 'px';
-        }
-
-        function renderMonthlyView() {
-            // Nothing special needed, charts and table are already in DOM
         }
 
         function updateCharts(monthData) {
@@ -837,7 +831,6 @@
             });
         }
 
-        // View toggle
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
@@ -847,15 +840,7 @@
                 
                 document.querySelector('.monthly-view').classList.toggle('active', currentView === 'monthly');
                 document.querySelector('.calendar-view').classList.toggle('active', currentView === 'calendar');
-                document.getElementById('monthSelect').addEventListener('change', e => {
-            currentMonth = parseInt(e.target.value);
-            updateDashboard();
-        });
-
-        updateDashboard();
-    </script>
-</body>
-</html>').disabled = currentView === 'calendar';
+                document.getElementById('monthSelect').disabled = currentView === 'calendar';
                 
                 updateDashboard();
             });
@@ -866,4 +851,12 @@
             updateDashboard();
         });
 
-        document.getElementById('monthSelect
+        document.getElementById('monthSelect').addEventListener('change', e => {
+            currentMonth = parseInt(e.target.value);
+            updateDashboard();
+        });
+
+        updateDashboard();
+    </script>
+</body>
+</html>
