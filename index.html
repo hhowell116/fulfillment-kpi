@@ -847,7 +847,15 @@
                 
                 document.querySelector('.monthly-view').classList.toggle('active', currentView === 'monthly');
                 document.querySelector('.calendar-view').classList.toggle('active', currentView === 'calendar');
-                document.getElementById('monthSelect').disabled = currentView === 'calendar';
+                document.getElementById('monthSelect').addEventListener('change', e => {
+            currentMonth = parseInt(e.target.value);
+            updateDashboard();
+        });
+
+        updateDashboard();
+    </script>
+</body>
+</html>').disabled = currentView === 'calendar';
                 
                 updateDashboard();
             });
