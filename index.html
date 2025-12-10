@@ -728,37 +728,31 @@
             
             const ctx1 = document.getElementById('fillRateChart').getContext('2d');
             
-            // NEW: Create a stacked bar chart where each day has one bar split into two colors
+            // Create a stacked bar chart where each day has one bar with two sections
             fillRateChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: '7 Day Fill Rate',
-                            data: monthData.map(d => d.rate7),
-                            backgroundColor: '#8b7355', // Dark tan for 7-day
-                            borderColor: '#7a634d',
-                            borderWidth: 1,
-                            borderRadius: {
-                                topLeft: 4,
-                                topRight: 4,
-                                bottomLeft: 0,
-                                bottomRight: 0
-                            }
-                        },
-                        {
                             label: '4 Day Fill Rate',
                             data: monthData.map(d => d.rate4),
                             backgroundColor: '#d2b48c', // Light tan for 4-day
-                            borderColor: '#c4a57b',
-                            borderWidth: 1,
-                            borderRadius: {
-                                topLeft: 0,
-                                topRight: 0,
-                                bottomLeft: 4,
-                                bottomRight: 4
-                            }
+                            borderWidth: 0, // Remove border
+                            borderSkipped: false, // Apply border radius to all sides
+                            borderRadius: 4, // Rounded corners
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8
+                        },
+                        {
+                            label: '7 Day Fill Rate',
+                            data: monthData.map(d => d.rate7),
+                            backgroundColor: '#8b7355', // Dark tan for 7-day
+                            borderWidth: 0, // Remove border
+                            borderSkipped: false, // Apply border radius to all sides
+                            borderRadius: 4, // Rounded corners
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8
                         }
                     ]
                 },
@@ -796,7 +790,7 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            stacked: false, // We want them to overlap, not stack
+                            stacked: false, // We want them to appear as one bar
                             ticks: { 
                                 callback: v => v + '%',
                                 color: '#a0906f',
@@ -834,10 +828,7 @@
                     interaction: {
                         intersect: false,
                         mode: 'index'
-                    },
-                    // Make bars appear as one bar per day with two colors
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.8
+                    }
                 }
             });
             
