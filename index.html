@@ -264,7 +264,7 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -287,15 +287,18 @@
         .calendar-days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
+            gap: 6px;
         }
 
         .day-label {
             text-align: center;
-            font-size: 0.75em;
+            font-size: 0.8em;
             color: #a0906f;
             font-weight: 600;
-            padding: 5px;
+            padding: 8px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .calendar-day {
@@ -305,11 +308,12 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            font-size: 0.75em;
+            font-size: 0.8em;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            padding: 4px;
+            padding: 6px;
+            text-align: center;
         }
 
         .calendar-day:hover {
@@ -563,6 +567,15 @@
                     document.getElementById('fillRate7Day').textContent = 'N/A';
                     document.getElementById('totalOrders').textContent = '0';
                     document.getElementById('avgOrders').textContent = '0';
+                    
+                    // Clear charts when no data
+                    if (fillRateChart) fillRateChart.destroy();
+                    if (ordersChart) ordersChart.destroy();
+                    
+                    // Clear table
+                    document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #a0906f;">No data available for this month</td></tr>';
+                    
+                    document.getElementById('periodLabel').textContent = 'month';
                     return;
                 }
                 
