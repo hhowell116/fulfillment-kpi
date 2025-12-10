@@ -157,7 +157,6 @@
             min-width: 0;
         }
 
-        /* NEW: Side-by-side charts */
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -217,9 +216,25 @@
             border-collapse: collapse;
         }
 
+        .table-container tbody {
+            display: block;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .table-container thead,
+        .table-container tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
         thead {
             background: linear-gradient(135deg, #8b7355 0%, #a0906f 100%);
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         th {
@@ -488,9 +503,7 @@
         </div>
 
         <div class="monthly-view active">
-            <!-- GRAPHS SIDE BY SIDE AT TOP -->
             <div class="charts-row">
-                <!-- GRAPH 1 — Daily Fill Rates -->
                 <div class="chart-container">
                     <div class="chart-header">
                         <h2 class="chart-title">Daily Fulfillment Rates</h2>
@@ -508,7 +521,6 @@
                     <canvas id="fillRateChart"></canvas>
                 </div>
 
-                <!-- GRAPH 2 — Orders Remaining -->
                 <div class="chart-container">
                     <div class="chart-header">
                         <h2 class="chart-title">Orders Remaining Over Time</h2>
@@ -517,7 +529,6 @@
                 </div>
             </div>
 
-            <!-- TABLE AT BOTTOM -->
             <div class="table-container">
                 <table>
                     <thead>
@@ -600,11 +611,9 @@
                     document.getElementById('totalOrders').textContent = '0';
                     document.getElementById('avgOrders').textContent = '0';
                     
-                    // Clear charts when no data
                     if (fillRateChart) fillRateChart.destroy();
                     if (ordersChart) ordersChart.destroy();
                     
-                    // Clear table
                     document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #a0906f;">No data available for this month</td></tr>';
                     
                     document.getElementById('periodLabel').textContent = 'month';
@@ -861,6 +870,4 @@
                 const tr = document.createElement('tr');
                 const date = parseDate(row.date);
                 
-                tr.innerHTML = `
-                    <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                    <td>${
+                tr
