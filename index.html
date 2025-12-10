@@ -728,7 +728,7 @@
             
             const ctx1 = document.getElementById('fillRateChart').getContext('2d');
             
-            // Create a stacked bar chart where each day has one bar with two sections
+            // Create a grouped bar chart with 4-day and 7-day bars side by side for each day
             fillRateChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
@@ -738,21 +738,21 @@
                             label: '4 Day Fill Rate',
                             data: monthData.map(d => d.rate4),
                             backgroundColor: '#d2b48c', // Light tan for 4-day
-                            borderWidth: 0, // Remove border
-                            borderSkipped: false, // Apply border radius to all sides
-                            borderRadius: 4, // Rounded corners
-                            barPercentage: 0.7,
-                            categoryPercentage: 0.8
+                            borderColor: '#d2b48c',
+                            borderWidth: 0,
+                            borderRadius: 4,
+                            barPercentage: 0.4, // Each bar takes 40% of the available width
+                            categoryPercentage: 0.8 // Group of bars takes 80% of category width
                         },
                         {
                             label: '7 Day Fill Rate',
                             data: monthData.map(d => d.rate7),
                             backgroundColor: '#8b7355', // Dark tan for 7-day
-                            borderWidth: 0, // Remove border
-                            borderSkipped: false, // Apply border radius to all sides
-                            borderRadius: 4, // Rounded corners
-                            barPercentage: 0.7,
-                            categoryPercentage: 0.8
+                            borderColor: '#8b7355',
+                            borderWidth: 0,
+                            borderRadius: 4,
+                            barPercentage: 0.4, // Each bar takes 40% of the available width
+                            categoryPercentage: 0.8 // Group of bars takes 80% of category width
                         }
                     ]
                 },
@@ -790,7 +790,7 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            stacked: false, // We want them to appear as one bar
+                            stacked: false, // Not stacked - we want side by side bars
                             ticks: { 
                                 callback: v => v + '%',
                                 color: '#a0906f',
@@ -821,7 +821,8 @@
                                 display: true,
                                 text: 'Day of Month',
                                 color: '#8b7355',
-                                font: { size: 12, weight: 'bold' }
+                                font: { size: 12, weight: 'bold' },
+                                padding: { top: 10 }
                             }
                         }
                     },
@@ -925,7 +926,8 @@
                                 display: true,
                                 text: 'Day of Month',
                                 color: '#8b7355',
-                                font: { size: 12, weight: 'bold' }
+                                font: { size: 12, weight: 'bold' },
+                                padding: { top: 10 }
                             }
                         }
                     },
