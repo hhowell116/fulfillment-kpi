@@ -1,333 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCO Fulfillment Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f5f0 0%, #e8e4d9 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        header { background: linear-gradient(135deg, #ffffff 0%, #f5f0e8 100%); padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); margin-bottom: 30px; border: 1px solid rgba(210, 180, 140, 0.2); }
-        h1 { color: #8b7355; font-size: 2.5em; font-weight: 600; letter-spacing: -0.5px; }
-        .subtitle { color: #a0906f; font-size: 1.1em; margin-top: 8px; }
-        .controls { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        .view-toggle { display: flex; gap: 10px; margin-left: auto; }
-        .view-btn { padding: 10px 20px; border: 2px solid #d2b48c; border-radius: 10px; background: white; color: #8b7355; font-size: 0.95em; cursor: pointer; transition: all 0.3s ease; }
-        .view-btn.active { background: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%); color: white; border-color: #c4a57b; }
-        .view-btn:hover:not(.active) { background: #faf8f5; }
-        select { padding: 12px 20px; border: 2px solid #d2b48c; border-radius: 10px; background: white; color: #8b7355; font-size: 1em; cursor: pointer; transition: all 0.3s ease; }
-        select:hover { border-color: #a0906f; box-shadow: 0 2px 10px rgba(210, 180, 140, 0.2); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%); padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); border: 1px solid rgba(210, 180, 140, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 35px rgba(0,0,0,0.1); }
-        .stat-label { color: #a0906f; font-size: 0.9em; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .stat-value { color: #8b7355; font-size: 2.2em; font-weight: 700; }
-        .stat-subtitle { color: #b8a68f; font-size: 0.85em; margin-top: 8px; }
-        .chart-container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); margin-bottom: 20px; min-width: 0; }
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; min-width: 0; }
-        .table-container { background: white; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 30px; }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .chart-title { color: #8b7355; font-size: 1.2em; font-weight: 600; }
-        .legend { display: flex; gap: 15px; flex-wrap: wrap; }
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-color { width: 14px; height: 14px; border-radius: 3px; }
-        .legend-label { color: #8b7355; font-size: 0.8em; }
-        table { width: 100%; border-collapse: collapse; }
-        .table-container tbody { display: block; overflow-y: auto; max-height: 600px; }
-        .table-container thead, .table-container tbody tr { display: table; width: 100%; table-layout: fixed; }
-        thead { background: linear-gradient(135deg, #8b7355 0%, #a0906f 100%); color: white; position: sticky; top: 0; z-index: 10; }
-        th { padding: 18px 15px; text-align: left; font-weight: 600; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { padding: 15px; border-bottom: 1px solid #f0ebe3; color: #6b5d4f; }
-        tbody tr { transition: background 0.2s ease; }
-        tbody tr:hover { background: #faf8f5; }
-        .rate-good { color: #5a8c5a; font-weight: 600; }
-        .rate-warning { color: #d4a05c; font-weight: 600; }
-        .rate-poor { color: #c67b7b; font-weight: 600; }
-        .calendar-view { display: none; }
-        .calendar-view.active { display: block; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .month-calendar { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); min-width: 0; }
-        .month-header { color: #8b7355; font-size: 1.2em; font-weight: 600; margin-bottom: 15px; text-align: center; }
-        .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; width: 100%; }
-        .day-label { text-align: center; font-size: 0.75em; color: #a0906f; font-weight: 600; padding: 6px 2px; display: flex; align-items: center; justify-content: center; min-width: 0; }
-        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.7em; cursor: pointer; transition: all 0.2s ease; position: relative; padding: 4px 2px; text-align: center; min-width: 0; overflow: hidden; }
-        .calendar-day:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-        .calendar-day.empty { cursor: default; }
-        .calendar-day.empty:hover { transform: none; box-shadow: none; }
-        .day-number { font-weight: 600; margin-bottom: 1px; font-size: 1em; }
-        .day-rate { font-size: 0.85em; font-weight: 600; white-space: nowrap; }
-        .cal-rate-excellent { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32; }
-        .cal-rate-good { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); color: #558b2f; }
-        .cal-rate-warning { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #e65100; }
-        .cal-rate-poor { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #c62828; }
-        .cal-rate-none { background: #f5f5f5; color: #999; }
-        .tooltip { position: fixed; background: rgba(0, 0, 0, 0.9); color: white; padding: 12px; border-radius: 8px; font-size: 0.85em; pointer-events: none; z-index: 1000; display: none; max-width: 250px; }
-        .tooltip.show { display: block; }
-        .monthly-view { display: none; }
-        .monthly-view.active { display: block; }
-        .chart-container canvas { height: 350px !important; max-height: 350px !important; width: 100% !important; }
-        @media (max-width: 768px) {
-            h1 { font-size: 1.8em; }
-            .stats-grid, .calendar-grid { grid-template-columns: 1fr; }
-            .charts-row { grid-template-columns: 1fr; }
-            .chart-container canvas { height: 300px !important; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RCO Fulfillment Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f5f0 0%, #e8e4d9 100%); min-height: 100vh; padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; }
+header { background: linear-gradient(135deg, #ffffff 0%, #f5f0e8 100%); padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); margin-bottom: 30px; border: 1px solid rgba(210, 180, 140, 0.2); }
+h1 { color: #8b7355; font-size: 2.5em; font-weight: 600; letter-spacing: -0.5px; }
+.subtitle { color: #a0906f; font-size: 1.1em; margin-top: 8px; }
+.controls { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+.view-toggle { display: flex; gap: 10px; margin-left: auto; }
+.view-btn { padding: 10px 20px; border: 2px solid #d2b48c; border-radius: 10px; background: white; color: #8b7355; font-size: 0.95em; cursor: pointer; transition: all 0.3s ease; }
+.view-btn.active { background: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%); color: white; border-color: #c4a57b; }
+.view-btn:hover:not(.active) { background: #faf8f5; }
+select { padding: 12px 20px; border: 2px solid #d2b48c; border-radius: 10px; background: white; color: #8b7355; font-size: 1em; cursor: pointer; transition: all 0.3s ease; }
+select:hover { border-color: #a0906f; box-shadow: 0 2px 10px rgba(210, 180, 140, 0.2); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.stat-card { background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%); padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); border: 1px solid rgba(210, 180, 140, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 35px rgba(0,0,0,0.1); }
+.stat-label { color: #a0906f; font-size: 0.9em; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.stat-value { color: #8b7355; font-size: 2.2em; font-weight: 700; }
+.stat-subtitle { color: #b8a68f; font-size: 0.85em; margin-top: 8px; }
+.chart-container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); margin-bottom: 20px; min-width: 0; }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; min-width: 0; }
+.table-container { background: white; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 30px; }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+.chart-title { color: #8b7355; font-size: 1.2em; font-weight: 600; }
+.legend { display: flex; gap: 15px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-color { width: 14px; height: 14px; border-radius: 3px; }
+.legend-label { color: #8b7355; font-size: 0.8em; }
+table { width: 100%; border-collapse: collapse; }
+.table-container tbody { display: block; overflow-y: auto; max-height: 600px; }
+.table-container thead, .table-container tbody tr { display: table; width: 100%; table-layout: fixed; }
+thead { background: linear-gradient(135deg, #8b7355 0%, #a0906f 100%); color: white; position: sticky; top: 0; z-index: 10; }
+th { padding: 18px 15px; text-align: left; font-weight: 600; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 15px; border-bottom: 1px solid #f0ebe3; color: #6b5d4f; }
+tbody tr { transition: background 0.2s ease; }
+tbody tr:hover { background: #faf8f5; }
+.rate-good { color: #5a8c5a; font-weight: 600; }
+.rate-warning { color: #d4a05c; font-weight: 600; }
+.rate-poor { color: #c67b7b; font-weight: 600; }
+.calendar-view { display: none; }
+.calendar-view.active { display: block; }
+.calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.month-calendar { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); min-width: 0; }
+.month-header { color: #8b7355; font-size: 1.2em; font-weight: 600; margin-bottom: 15px; text-align: center; }
+.calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; width: 100%; }
+.day-label { text-align: center; font-size: 0.75em; color: #a0906f; font-weight: 600; padding: 6px 2px; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.7em; cursor: pointer; transition: all 0.2s ease; position: relative; padding: 4px 2px; text-align: center; min-width: 0; overflow: hidden; }
+.calendar-day:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+.calendar-day.empty { cursor: default; }
+.calendar-day.empty:hover { transform: none; box-shadow: none; }
+.day-number { font-weight: 600; margin-bottom: 1px; font-size: 1em; }
+.day-rate { font-size: 0.85em; font-weight: 600; white-space: nowrap; }
+.cal-rate-excellent { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32; }
+.cal-rate-good { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); color: #558b2f; }
+.cal-rate-warning { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #e65100; }
+.cal-rate-poor { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #c62828; }
+.cal-rate-none { background: #f5f5f5; color: #999; }
+.tooltip { position: fixed; background: rgba(0, 0, 0, 0.9); color: white; padding: 12px; border-radius: 8px; font-size: 0.85em; pointer-events: none; z-index: 1000; display: none; max-width: 250px; }
+.tooltip.show { display: block; }
+.monthly-view { display: none; }
+.monthly-view.active { display: block; }
+.chart-container canvas { height: 350px !important; max-height: 350px !important; width: 100% !important; }
+@media (max-width: 768px) {
+h1 { font-size: 1.8em; }
+.stats-grid, .calendar-grid { grid-template-columns: 1fr; }
+.charts-row { grid-template-columns: 1fr; }
+.chart-container canvas { height: 300px !important; }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📦 RCO Fulfillment Dashboard</h1>
-            <div class="subtitle">Real-time order fulfillment analytics and KPIs</div>
-        </header>
-        <div class="controls">
-            <select id="yearSelect">
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-            </select>
-            <select id="monthSelect">
-                <option value="0">January</option>
-                <option value="1">February</option>
-                <option value="2">March</option>
-                <option value="3">April</option>
-                <option value="4">May</option>
-                <option value="5">June</option>
-                <option value="6">July</option>
-                <option value="7">August</option>
-                <option value="8">September</option>
-                <option value="9">October</option>
-                <option value="10">November</option>
-                <option value="11">December</option>
-            </select>
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="monthly">Monthly</button>
-                <button class="view-btn" data-view="calendar">Calendar</button>
-            </div>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Monthly Fill Rate (4 Day)</div>
-                <div class="stat-value" id="fillRate4Day">-</div>
-                <div class="stat-subtitle">Target: 85%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Monthly Fill Rate (7 Day)</div>
-                <div class="stat-value" id="fillRate7Day">-</div>
-                <div class="stat-subtitle">Target: 95%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Orders Processed</div>
-                <div class="stat-value" id="totalOrders">-</div>
-                <div class="stat-subtitle">This <span id="periodLabel">month</span></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Average Daily Orders</div>
-                <div class="stat-value" id="avgOrders">-</div>
-                <div class="stat-subtitle">Per day</div>
-            </div>
-        </div>
-        <div class="monthly-view active">
-            <div class="charts-row">
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h2 class="chart-title">Daily Fulfillment Rates</h2>
-                        <div class="legend">
-                            <div class="legend-item"><div class="legend-color" style="background: #d2b48c;"></div><span class="legend-label">4 Day Rate</span></div>
-                            <div class="legend-item"><div class="legend-color" style="background: #8b7355;"></div><span class="legend-label">7 Day Rate</span></div>
-                        </div>
-                    </div>
-                    <canvas id="fillRateChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-header"><h2 class="chart-title">Orders Remaining Over Time</h2></div>
-                    <canvas id="ordersChart"></canvas>
-                </div>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Orders Received</th>
-                            <th>Remaining (4 Day)</th>
-                            <th>Remaining (7 Day)</th>
-                            <th>Fill Rate (4 Day)</th>
-                            <th>Fill Rate (7 Day)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTable"></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="calendar-view">
-            <div class="calendar-grid" id="calendarGrid"></div>
-        </div>
-        <div class="tooltip" id="tooltip"></div>
-    </div>
-    <script src="data.js"></script>
-    <script>
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let currentView = 'monthly';
-        let fillRateChart, ordersChart;
+<div class="container">
+<header>
+<h1>📦 RCO Fulfillment Dashboard</h1>
+<div class="subtitle">Real-time order fulfillment analytics and KPIs</div>
+</header>
+<div class="controls">
+<select id="yearSelect">
+<option value="2025">2025</option>
+<option value="2026">2026</option>
+</select>
+<select id="monthSelect">
+<option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option>
+</select>
+<div class="view-toggle">
+<button class="view-btn active" data-view="monthly">Monthly</button>
+<button class="view-btn" data-view="calendar">Calendar</button>
+</div>
+</div>
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-label">Monthly Fill Rate (4 Day)</div><div class="stat-value" id="fillRate4Day">-</div><div class="stat-subtitle">Target: 85%</div></div>
+<div class="stat-card"><div class="stat-label">Monthly Fill Rate (7 Day)</div><div class="stat-value" id="fillRate7Day">-</div><div class="stat-subtitle">Target: 95%</div></div>
+<div class="stat-card"><div class="stat-label">Total Orders Processed</div><div class="stat-value" id="totalOrders">-</div><div class="stat-subtitle">This <span id="periodLabel">month</span></div></div>
+<div class="stat-card"><div class="stat-label">Average Daily Orders</div><div class="stat-value" id="avgOrders">-</div><div class="stat-subtitle">Per day</div></div>
+</div>
+<div class="monthly-view active">
+<div class="charts-row">
+<div class="chart-container">
+<div class="chart-header">
+<h2 class="chart-title">Daily Fulfillment Rates</h2>
+<div class="legend">
+<div class="legend-item"><div class="legend-color" style="background: #d2b48c;"></div><span class="legend-label">4 Day Rate</span></div>
+<div class="legend-item"><div class="legend-color" style="background: #8b7355;"></div><span class="legend-label">7 Day Rate</span></div>
+</div>
+</div>
+<canvas id="fillRateChart"></canvas>
+</div>
+<div class="chart-container">
+<div class="chart-header"><h2 class="chart-title">Orders Remaining Over Time</h2></div>
+<canvas id="ordersChart"></canvas>
+</div>
+</div>
+<div class="table-container">
+<table>
+<thead><tr><th>Date</th><th>Orders Received</th><th>Remaining (4 Day)</th><th>Remaining (7 Day)</th><th>Fill Rate (4 Day)</th><th>Fill Rate (7 Day)</th></tr></thead>
+<tbody id="dataTable"></tbody>
+</table>
+</div>
+</div>
+<div class="calendar-view"><div class="calendar-grid" id="calendarGrid"></div></div>
+<div class="tooltip" id="tooltip"></div>
+</div>
+<script src="data.js"></script>
+<script>
+let currentMonth=new Date().getMonth(),currentYear=new Date().getFullYear(),currentView='monthly',fillRateChart,ordersChart;
+document.getElementById('monthSelect').value=currentMonth;
 
-        document.getElementById('monthSelect').value = currentMonth;
+function parseDate(d){const p=d.split('/');return new Date(parseInt(p[2]),parseInt(p[0])-1,parseInt(p[1]))}
+function getMonthData(y,m){return fullData.filter(d=>{const dt=parseDate(d.date);return dt.getFullYear()===y&&dt.getMonth()===m&&d.orders>0})}
+function getYearData(y){return fullData.filter(d=>parseDate(d.date).getFullYear()===y)}
+function updateDashboard(){
+if(currentView==='calendar'){
+renderCalendarView();
+const yd=getYearData(currentYear).filter(d=>d.orders>0);
+if(!yd.length){document.getElementById('fillRate4Day').textContent='N/A';document.getElementById('fillRate7Day').textContent='N/A';document.getElementById('totalOrders').textContent='0';document.getElementById('avgOrders').textContent='0';return}
+const a4=yd.reduce((s,d)=>s+d.rate4,0)/yd.length,a7=yd.reduce((s,d)=>s+d.rate7,0)/yd.length,tot=yd.reduce((s,d)=>s+d.orders,0);
+document.getElementById('fillRate4Day').textContent=a4.toFixed(0)+'%';document.getElementById('fillRate7Day').textContent=a7.toFixed(0)+'%';document.getElementById('totalOrders').textContent=tot.toLocaleString();document.getElementById('avgOrders').textContent=Math.round(tot/yd.length).toLocaleString();document.getElementById('periodLabel').textContent='year';
+}else{
+const md=getMonthData(currentYear,currentMonth);
+if(!md.length){document.getElementById('fillRate4Day').textContent='N/A';document.getElementById('fillRate7Day').textContent='N/A';document.getElementById('totalOrders').textContent='0';document.getElementById('avgOrders').textContent='0';if(fillRateChart)fillRateChart.destroy();if(ordersChart)ordersChart.destroy();document.getElementById('dataTable').innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:#a0906f;">No data available</td></tr>';document.getElementById('periodLabel').textContent='month';return}
+const a4=md.reduce((s,d)=>s+d.rate4,0)/md.length,a7=md.reduce((s,d)=>s+d.rate7,0)/md.length,tot=md.reduce((s,d)=>s+d.orders,0);
+document.getElementById('fillRate4Day').textContent=a4.toFixed(0)+'%';document.getElementById('fillRate7Day').textContent=a7.toFixed(0)+'%';document.getElementById('totalOrders').textContent=tot.toLocaleString();document.getElementById('avgOrders').textContent=Math.round(tot/md.length).toLocaleString();document.getElementById('periodLabel').textContent='month';
+updateCharts(md);updateTable(md);
+}
+}
 
-        function parseDate(d) {
-            const p = d.split('/');
-            return new Date(parseInt(p[2]), parseInt(p[0]) - 1, parseInt(p[1]));
-        }
+function renderCalendarView(){
+const g=document.getElementById('calendarGrid'),ms=['January','February','March','April','May','June','July','August','September','October','November','December'];
+g.innerHTML='';
+for(let m=0;m<12;m++){
+const md=document.createElement('div');md.className='month-calendar';
+const h=document.createElement('div');h.className='month-header';h.textContent=ms[m];md.appendChild(h);
+const dc=document.createElement('div');dc.className='calendar-days';
+['S','M','T','W','T','F','S'].forEach(d=>{const l=document.createElement('div');l.className='day-label';l.textContent=d;dc.appendChild(l)});
+const fd=new Date(currentYear,m,1).getDay(),dim=new Date(currentYear,m+1,0).getDate();
+for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='calendar-day empty';dc.appendChild(e)}
+for(let d=1;d<=dim;d++){
+const cd=document.createElement('div');cd.className='calendar-day';
+const dtStr=(m+1)+'/'+d+'/'+currentYear;
+const data=fullData.find(x=>x.date===dtStr);
+const num=document.createElement('div');num.className='day-number';num.textContent=d;cd.appendChild(num);
+const rate=document.createElement('div');rate.className='day-rate';
+if(data){rate.textContent=data.rate4+'% / '+data.rate7+'%';if(data.rate7>=85)rate.classList.add('cal-rate-good');else if(data.rate7>=75)rate.classList.add('cal-rate-warning');else rate.classList.add('cal-rate-poor')}else{rate.textContent='-';rate.classList.add('cal-rate-none')}
+cd.appendChild(rate);dc.appendChild(cd)}
+md.appendChild(dc);g.appendChild(md)}
+}
 
-        function getMonthData(y, m) {
-            return fullData.filter(d => {
-                const dt = parseDate(d.date);
-                return dt.getFullYear() === y && dt.getMonth() === m && d.orders > 0;
-            });
-        }
+function updateCharts(md){
+if(fillRateChart)fillRateChart.destroy();if(ordersChart)ordersChart.destroy();
+const ctx=document.getElementById('fillRateChart').getContext('2d'),ctx2=document.getElementById('ordersChart').getContext('2d');
+fillRateChart=new Chart(ctx,{type:'line',data:{labels:md.map(d=>d.date),datasets:[{label:'4 Day Rate',data:md.map(d=>d.rate4),borderColor:'#d2b48c',backgroundColor:'rgba(210,180,140,0.2)',fill:true,tension:0.3},{label:'7 Day Rate',data:md.map(d=>d.rate7),borderColor:'#8b7355',backgroundColor:'rgba(139,115,85,0.2)',fill:true,tension:0.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
+ordersChart=new Chart(ctx2,{type:'bar',data:{labels:md.map(d=>d.date),datasets:[{label:'Remaining 4 Day',data:md.map(d=>d.rem4),backgroundColor:'#d2b48c'},{label:'Remaining 7 Day',data:md.map(d=>d.rem7),backgroundColor:'#8b7355'}]},options:{responsive:true,plugins:{legend:{position:'top'}}}});
+}
 
-        function getYearData(y) {
-            return fullData.filter(d => parseDate(d.date).getFullYear() === y);
-        }
+function updateTable(md){
+const t=document.getElementById('dataTable');t.innerHTML='';md.forEach(d=>{const r=document.createElement('tr');r.innerHTML=`<td>${d.date}</td><td>${d.orders}</td><td>${d.rem4}</td><td>${d.rem7}</td><td class="${d.rate4>=85?'rate-good':d.rate4>=75?'rate-warning':'rate-poor'}">${d.rate4}%</td><td class="${d.rate7>=95?'rate-good':d.rate7>=85?'rate-warning':'rate-poor'}">${d.rate7}%</td>`;t.appendChild(r)})}
 
-        function updateDashboard() {
-            if (currentView === 'calendar') {
-                renderCalendarView();
-                const yd = getYearData(currentYear).filter(d => d.orders > 0);
-                if (!yd.length) {
-                    document.getElementById('fillRate4Day').textContent = 'N/A';
-                    document.getElementById('fillRate7Day').textContent = 'N/A';
-                    document.getElementById('totalOrders').textContent = '0';
-                    document.getElementById('avgOrders').textContent = '0';
-                    return;
-                }
-                const a4 = yd.reduce((s, d) => s + d.rate4, 0) / yd.length;
-                const a7 = yd.reduce((s, d) => s + d.rate7, 0) / yd.length;
-                const tot = yd.reduce((s, d) => s + d.orders, 0);
-                document.getElementById('fillRate4Day').textContent = a4.toFixed(0) + '%';
-                document.getElementById('fillRate7Day').textContent = a7.toFixed(0) + '%';
-                document.getElementById('totalOrders').textContent = tot.toLocaleString();
-                document.getElementById('avgOrders').textContent = Math.round(tot / yd.length).toLocaleString();
-                document.getElementById('periodLabel').textContent = 'year';
-            } else {
-                const md = getMonthData(currentYear, currentMonth);
-                if (!md.length) {
-                    document.getElementById('fillRate4Day').textContent = 'N/A';
-                    document.getElementById('fillRate7Day').textContent = 'N/A';
-                    document.getElementById('totalOrders').textContent = '0';
-                    document.getElementById('avgOrders').textContent = '0';
-                    if (fillRateChart) fillRateChart.destroy();
-                    if (ordersChart) ordersChart.destroy();
-                    document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#a0906f;">No data available</td></tr>';
-                    document.getElementById('fillRateChart').getContext('2d').clearRect(0,0,fillRateChart?.canvas.width,fillRateChart?.canvas.height);
-                    document.getElementById('ordersChart').getContext('2d').clearRect(0,0,ordersChart?.canvas.width,ordersChart?.canvas.height);
-                    return;
-                }
-                const a4 = md.reduce((s, d) => s + d.rate4, 0) / md.length;
-                const a7 = md.reduce((s, d) => s + d.rate7, 0) / md.length;
-                const tot = md.reduce((s, d) => s + d.orders, 0);
-                document.getElementById('fillRate4Day').textContent = a4.toFixed(0) + '%';
-                document.getElementById('fillRate7Day').textContent = a7.toFixed(0) + '%';
-                document.getElementById('totalOrders').textContent = tot.toLocaleString();
-                document.getElementById('avgOrders').textContent = Math.round(tot / md.length).toLocaleString();
-                document.getElementById('periodLabel').textContent = 'month';
-                document.getElementById('dataTable').innerHTML = md.map(d => {
-                    let cls4 = d.rate4 >= 85 ? 'rate-good' : d.rate4 >= 70 ? 'rate-warning' : 'rate-poor';
-                    let cls7 = d.rate7 >= 95 ? 'rate-good' : d.rate7 >= 80 ? 'rate-warning' : 'rate-poor';
-                    return `<tr><td>${d.date}</td><td>${d.orders}</td><td>${d.remain4}</td><td>${d.remain7}</td><td class="${cls4}">${d.rate4.toFixed(0)}%</td><td class="${cls7}">${d.rate7.toFixed(0)}%</td></tr>`;
-                }).join('');
-                const ctx1 = document.getElementById('fillRateChart').getContext('2d');
-                const ctx2 = document.getElementById('ordersChart').getContext('2d');
-                if (fillRateChart) fillRateChart.destroy();
-                if (ordersChart) ordersChart.destroy();
-                fillRateChart = new Chart(ctx1, {
-                    type: 'line',
-                    data: {
-                        labels: md.map(d => d.date),
-                        datasets: [
-                            { label: '4 Day', data: md.map(d => d.rate4), borderColor: '#d2b48c', backgroundColor: '#d2b48c44', fill: true, tension: 0.3 },
-                            { label: '7 Day', data: md.map(d => d.rate7), borderColor: '#8b7355', backgroundColor: '#8b735544', fill: true, tension: 0.3 }
-                        ]
-                    },
-                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } } }
-                });
-                ordersChart = new Chart(ctx2, {
-                    type: 'bar',
-                    data: { labels: md.map(d => d.date), datasets: [{ label: 'Remaining Orders', data: md.map(d => d.remain4 + d.remain7), backgroundColor: '#d2b48c' }] },
-                    options: { responsive: true, plugins: { legend: { display: false } } }
-                });
-            }
-        }
+document.getElementById('yearSelect').addEventListener('change',e=>{currentYear=parseInt(e.target.value);updateDashboard()});
+document.getElementById('monthSelect').addEventListener('change',e=>{currentMonth=parseInt(e.target.value);updateDashboard()});
+document.querySelectorAll('.view-btn').forEach(btn=>btn.addEventListener('click',e=>{document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentView=btn.dataset.view;document.querySelectorAll('.monthly-view,.calendar-view').forEach(v=>v.classList.remove('active'));document.querySelector('.'+currentView+'-view').classList.add('active');updateDashboard()}));
 
-        function renderCalendarView() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            const md = getMonthData(currentYear, currentMonth);
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const dim = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const monthDiv = document.createElement('div');
-            monthDiv.className = 'month-calendar';
-            const header = document.createElement('div');
-            header.className = 'month-header';
-            header.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
-            monthDiv.appendChild(header);
-            const daysGrid = document.createElement('div');
-            daysGrid.className = 'calendar-days';
-            ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
-                const dl = document.createElement('div');
-                dl.className = 'day-label';
-                dl.textContent = d;
-                daysGrid.appendChild(dl);
-            });
-            for (let i=0;i<firstDay;i++){
-                const emptyDay = document.createElement('div');
-                emptyDay.className='calendar-day empty';
-                daysGrid.appendChild(emptyDay);
-            }
-            md.forEach(d=>{
-                const dayDiv = document.createElement('div');
-                dayDiv.className='calendar-day';
-                const dt=parseDate(d.date).getDate();
-                dayDiv.innerHTML=`<div class="day-number">${dt}</div><div class="day-rate">${d.rate4.toFixed(0)}%</div>`;
-                if (d.rate4>=85) dayDiv.classList.add('cal-rate-good');
-                else if(d.rate4>=70) dayDiv.classList.add('cal-rate-warning');
-                else dayDiv.classList.add('cal-rate-poor');
-                dayDiv.addEventListener('mouseover', e=>showTooltip(e,d));
-                dayDiv.addEventListener('mousemove', moveTooltip);
-                dayDiv.addEventListener('mouseout', hideTooltip);
-                daysGrid.appendChild(dayDiv);
-            });
-            monthDiv.appendChild(daysGrid);
-            grid.appendChild(monthDiv);
-        }
-
-        const tooltip = document.getElementById('tooltip');
-        function showTooltip(e,d){tooltip.innerHTML=`<strong>${d.date}</strong><br>Orders: ${d.orders}<br>4 Day Rate: ${d.rate4.toFixed(0)}%<br>7 Day Rate: ${d.rate7.toFixed(0)}%`;tooltip.classList.add('show');}
-        function moveTooltip(e){tooltip.style.top=(e.clientY+15)+'px';tooltip.style.left=(e.clientX+15)+'px';}
-        function hideTooltip(){tooltip.classList.remove('show');}
-
-        document.querySelectorAll('.view-btn').forEach(btn=>{
-            btn.addEventListener('click',()=>{
-                document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
-                btn.classList.add('active');
-                currentView=btn.dataset.view;
-                document.querySelector('.monthly-view').classList.toggle('active',currentView==='monthly');
-                document.querySelector('.calendar-view').classList.toggle('active',currentView==='calendar');
-                updateDashboard();
-            });
-        });
-
-        document.getElementById('monthSelect').addEventListener('change', e=>{
-            currentMonth=parseInt(e.target.value);
-            updateDashboard();
-        });
-        document.getElementById('yearSelect').addEventListener('change', e=>{
-            currentYear=parseInt(e.target.value);
-            updateDashboard();
-        });
-
-        updateDashboard();
-    </script>
+updateDashboard();
+</script>
 </body>
 </html>
