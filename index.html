@@ -138,47 +138,171 @@ function getMonthData(y,m){return fullData.filter(d=>{const dt=parseDate(d.date)
 function getYearData(y){return fullData.filter(d=>parseDate(d.date).getFullYear()===y)}
 function updateDashboard(){
 if(currentView==='calendar'){
-renderCalendarView();
-const yd=getYearData(currentYear).filter(d=>d.orders>0);
-if(!yd.length){document.getElementById('fillRate4Day').textContent='N/A';document.getElementById('fillRate7Day').textContent='N/A';document.getElementById('totalOrders').textContent='0';document.getElementById('avgOrders').textContent='0';return}
-const a4=yd.reduce((s,d)=>s+d.rate4,0)/yd.length,a7=yd.reduce((s,d)=>s+d.rate7,0)/yd.length,tot=yd.reduce((s,d)=>s+d.orders,0);
-document.getElementById('fillRate4Day').textContent=a4.toFixed(0)+'%';document.getElementById('fillRate7Day').textContent=a7.toFixed(0)+'%';document.getElementById('totalOrders').textContent=tot.toLocaleString();document.getElementById('avgOrders').textContent=Math.round(tot/yd.length).toLocaleString();document.getElementById('periodLabel').textContent='year';
-}else{
-const md=getMonthData(currentYear,currentMonth);
-if(!md.length){document.getElementById('fillRate4Day').textContent='N/A';document.getElementById('fillRate7Day').textContent='N/A';document.getElementById('totalOrders').textContent='0';document.getElementById('avgOrders').textContent='0';if(fillRateChart)fillRateChart.destroy();if(ordersChart)ordersChart.destroy();document.getElementById('dataTable').innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:#a0906f;">No data available</td></tr>';document.getElementById('periodLabel').textContent='month';return}
-const a4=md.reduce((s,d)=>s+d.rate4,0)/md.length,a7=md.reduce((s,d)=>s+d.rate7,0)/md.length,tot=md.reduce((s,d)=>s+d.orders,0);
-document.getElementById('fillRate4Day').textContent=a4.toFixed(0)+'%';document.getElementById('fillRate7Day').textContent=a7.toFixed(0)+'%';document.getElementById('totalOrders').textContent=tot.toLocaleString();document.getElementById('avgOrders').textContent=Math.round(tot/md.length).toLocaleString();document.getElementById('periodLabel').textContent='month';
-updateCharts(md);updateTable(md);
-}
+function renderCalendarView() {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    for (let m = 0; m < 12; m++) {
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'month-calendar';
+
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.textContent = months[m];
+        monthDiv.appendChild(header);
+
+        const daysContainer = document.createElement('div');
+        daysContainer.className = 'calendar-days';
+
+        ['S','M','T','W','T','F','S'].forEach(day => {
+            const label = document.createElement('div');
+            label.className = 'day-label';
+            label.textContent = day;
+            daysContainer.appendChild(label);
+        });
+
+        const firstDay = new Date(currentYear,m,1).getDay();
+        const daysInMonth = new Date(currentYear,m+1,0).getDate();
+
+        for (let i=0;i<firstDay;i++){
+            const empty = document.createElement('div');
+            empty.className='calendar-day empty';
+            daysContainer.appendChild(empty);
+        }
+
+        for (let d=1; d<=daysInMonth; d++){
+            const dayData = fullData.find(item => {
+                const date = parseDate(item.date);
+                return date.getFullYear()===currentYear && date.getMonth()===m && date.getDate()===d;
+            });
+
+            const dayDiv = document.createElement('div');
+            dayDiv.className='calendar-day';
+            dayDiv.innerHTML = `<div class="day-number">${d}</div>`;
+
+            if(dayData){
+                const rate = dayData.rate7;
+                let colorClass = 'cal-rate-poor';
+                if(rate >= 95) colorClass = 'cal-rate-excellent';
+                else if(rate >= 85) colorClass = 'cal-rate-good';
+                else if(rate >= 70) colorClass = 'cal-rate-warning';
+
+                dayDiv.classList.add(colorClass);
+                dayDiv.addEventListener('mouseenter', e=>showTooltip(e,dayData));
+                dayDiv.addEventListener('mouseleave', hideTooltip);
+                dayDiv.addEventListener('mousemove', moveTooltip);
+            } else {
+                dayDiv.classList.add('cal-rate-none');
+            }
+
+            daysContainer.appendChild(dayDiv);
+        }
+
+        monthDiv.appendChild(daysContainer);
+        grid.appendChild(monthDiv);
+    }
 }
 
-function renderCalendarView(){
-const g=document.getElementById('calendarGrid'),ms=['January','February','March','April','May','June','July','August','September','October','November','December'];
-g.innerHTML='';
-for(let m=0;m<12;m++){
-const md=document.createElement('div');md.className='month-calendar';
-const h=document.createElement('div');h.className='month-header';h.textContent=ms[m];md.appendChild(h);
-const dc=document.createElement('div');dc.className='calendar-days';
-['S','M','T','W','T','F','S'].forEach(d=>{const l=document.createElement('div');l.className='day-label';l.textContent=d;dc.appendChild(l)});
-const fd=new Date(currentYear,m,1).getDay(),dim=new Date(currentYear,m+1,0).getDate();
-for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='calendar-day empty';dc.appendChild(e)}
-for(let d=1;d<=dim;d++){
-const cd=document.createElement('div');cd.className='calendar-day';
-const dtStr=(m+1)+'/'+d+'/'+currentYear;
-const data=fullData.find(x=>x.date===dtStr);
-const num=document.createElement('div');num.className='day-number';num.textContent=d;cd.appendChild(num);
-const rate=document.createElement('div');rate.className='day-rate';
-if(data){rate.textContent=data.rate4+'% / '+data.rate7+'%';if(data.rate7>=85)rate.classList.add('cal-rate-good');else if(data.rate7>=75)rate.classList.add('cal-rate-warning');else rate.classList.add('cal-rate-poor')}else{rate.textContent='-';rate.classList.add('cal-rate-none')}
-cd.appendChild(rate);dc.appendChild(cd)}
-md.appendChild(dc);g.appendChild(md)}
+function updateCharts(monthData){
+    const labels = monthData.map(d=>parseDate(d.date).getDate());
+
+    if(fillRateChart) fillRateChart.destroy();
+    if(ordersChart) ordersChart.destroy();
+
+    const ctx1 = document.getElementById('fillRateChart').getContext('2d');
+    fillRateChart = new Chart(ctx1,{
+        type:'line',
+        data:{
+            labels,
+            datasets:[
+                {
+                    label:'4 Day Fill Rate',
+                    data: monthData.map(d=>d.rate4),
+                    borderColor:'#d2b48c',
+                    backgroundColor:'rgba(210,180,140,0.1)',
+                    borderWidth:2,
+                    tension:0.4,
+                    fill:true
+                },
+                {
+                    label:'7 Day Fill Rate',
+                    data: monthData.map(d=>d.rate7),
+                    borderColor:'#8b7355',
+                    backgroundColor:'rgba(139,115,85,0.1)',
+                    borderWidth:2,
+                    tension:0.4,
+                    fill:true
+                }
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    backgroundColor:'rgba(255,255,255,0.95)',
+                    titleColor:'#8b7355',
+                    bodyColor:'#6b5d4f',
+                    borderColor:'#d2b48c',
+                    borderWidth:1,
+                    padding:10,
+                    callbacks:{
+                        label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(2)+'%'
+                    }
+                }
+            },
+            scales:{
+                y:{
+                    beginAtZero:true,
+                    max:100,
+                    ticks:{color:'#a0906f'},
+                    grid:{color:'rgba(210,180,140,0.1)'}
+                },
+                x:{
+                    ticks:{color:'#a0906f'},
+                    grid:{color:'rgba(210,180,140,0.1)'}
+                }
+            }
+        }
+    });
+
+    const ctx2 = document.getElementById('ordersChart').getContext('2d');
+    ordersChart = new Chart(ctx2,{
+        type:'bar',
+        data:{
+            labels,
+            datasets:[
+                {
+                    label:'Orders Remaining (4 Day)',
+                    data:monthData.map(d=>d.rem4),
+                    backgroundColor:'rgba(210,180,140,0.6)',
+                    borderColor:'#d2b48c',
+                    borderWidth:1
+                },
+                {
+                    label:'Orders Remaining (7 Day)',
+                    data:monthData.map(d=>d.rem7),
+                    backgroundColor:'rgba(139,115,85,0.6)',
+                    borderColor:'#8b7355',
+                    borderWidth:1
+                }
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{legend:{position:'top'}},
+            scales:{
+                y:{beginAtZero:true,ticks:{color:'#a0906f'},grid:{color:'rgba(210,180,140,0.1)'}},
+                x:{ticks:{color:'#a0906f'},grid:{color:'rgba(210,180,140,0.1)'}}
+            }
+        }
+    });
 }
 
-function updateCharts(md){
-if(fillRateChart)fillRateChart.destroy();if(ordersChart)ordersChart.destroy();
-const ctx=document.getElementById('fillRateChart').getContext('2d'),ctx2=document.getElementById('ordersChart').getContext('2d');
-fillRateChart=new Chart(ctx,{type:'line',data:{labels:md.map(d=>d.date),datasets:[{label:'4 Day Rate',data:md.map(d=>d.rate4),borderColor:'#d2b48c',backgroundColor:'rgba(210,180,140,0.2)',fill:true,tension:0.3},{label:'7 Day Rate',data:md.map(d=>d.rate7),borderColor:'#8b7355',backgroundColor:'rgba(139,115,85,0.2)',fill:true,tension:0.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
-ordersChart=new Chart(ctx2,{type:'bar',data:{labels:md.map(d=>d.date),datasets:[{label:'Remaining 4 Day',data:md.map(d=>d.rem4),backgroundColor:'#d2b48c'},{label:'Remaining 7 Day',data:md.map(d=>d.rem7),backgroundColor:'#8b7355'}]},options:{responsive:true,plugins:{legend:{position:'top'}}}});
-}
 
 function updateTable(md){
 const t=document.getElementById('dataTable');t.innerHTML='';md.forEach(d=>{const r=document.createElement('tr');r.innerHTML=`<td>${d.date}</td><td>${d.orders}</td><td>${d.rem4}</td><td>${d.rem7}</td><td class="${d.rate4>=85?'rate-good':d.rate4>=75?'rate-warning':'rate-poor'}">${d.rate4}%</td><td class="${d.rate7>=95?'rate-good':d.rate7>=85?'rate-warning':'rate-poor'}">${d.rate7}%</td>`;t.appendChild(r)})}
@@ -191,3 +315,4 @@ updateDashboard();
 </script>
 </body>
 </html>
+
